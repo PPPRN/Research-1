@@ -7,903 +7,756 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-<!-- PDF.js for PDF text extraction -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Google APIs -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <style>
-/* ─── Reset & Base ─────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'Lora', Georgia, serif;
-  background: #0c0c0e;
-  color: #e2ddd4;
-  min-height: 100vh;
-  line-height: 1.6;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Lora',Georgia,serif;background:#0c0c0e;color:#e2ddd4;min-height:100vh;line-height:1.6}
+:root{
+  --bg:#0c0c0e;--surface:#141416;--surface2:#1b1b1f;--surface3:#232328;--surface4:#2a2a30;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.18);
+  --gold:#c9a96e;--gold2:#e8c98e;--gold-dim:rgba(201,169,110,0.1);
+  --green:#4a9e72;--green-dim:rgba(74,158,114,0.1);
+  --red:#c05050;--red-dim:rgba(192,80,80,0.1);
+  --blue:#4a82c4;--blue-dim:rgba(74,130,196,0.1);
+  --text:#e2ddd4;--text2:#a09890;--text3:#605a54;
+  --r:10px;--r-lg:14px;--r-xl:18px;
 }
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+.app{display:flex;flex-direction:column;min-height:100vh}
 
-/* ─── Tokens ───────────────────────────────────────────────────── */
-:root {
-  --bg:          #0c0c0e;
-  --surface:     #141416;
-  --surface2:    #1b1b1f;
-  --surface3:    #232328;
-  --surface4:    #2a2a30;
-  --border:      rgba(255,255,255,0.07);
-  --border2:     rgba(255,255,255,0.12);
-  --border3:     rgba(255,255,255,0.18);
-  --gold:        #c9a96e;
-  --gold2:       #e8c98e;
-  --gold-dim:    rgba(201,169,110,0.1);
-  --green:       #4a9e72;
-  --green-dim:   rgba(74,158,114,0.1);
-  --red:         #c05050;
-  --red-dim:     rgba(192,80,80,0.1);
-  --muted:       #7a746c;
-  --muted2:      #555050;
-  --text:        #e2ddd4;
-  --text2:       #a09890;
-  --text3:       #605a54;
-  --r:           10px;
-  --r-lg:        14px;
-  --r-xl:        18px;
+/* ── Header ── */
+header{
+  background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;
+  height:auto;min-height:62px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);gap:10px;flex-wrap:wrap;
+  padding-top:10px;padding-bottom:10px;
 }
+.logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;color:var(--gold);letter-spacing:.02em;white-space:nowrap}
+.logo i{font-size:22px}
+.logo-sub{font-size:11px;font-weight:400;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-left:6px;align-self:flex-end;margin-bottom:2px}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{padding:7px 18px;border:1px solid transparent;border-radius:8px;background:none;color:var(--text2);font-size:13px;font-family:'Lora',serif;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .18s}
+.nav-tab:hover{background:var(--surface2);color:var(--text)}
+.nav-tab.active{background:var(--surface3);color:var(--gold);border-color:var(--border2)}
+.nav-badge{background:var(--gold);color:#1a1208;border-radius:20px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;padding:1px 7px;min-width:22px;text-align:center;line-height:1.6}
+.nav-badge.green{background:var(--green);color:#fff}
 
-/* ─── Scrollbar ────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+/* ── Google Auth button ── */
+.btn-gauth{
+  padding:7px 14px;border-radius:8px;border:1px solid rgba(74,130,196,0.4);
+  background:var(--blue-dim);color:var(--blue);font-size:12px;font-family:'Lora',serif;
+  cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .16s;white-space:nowrap;
+}
+.btn-gauth:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-gauth.signed-in{border-color:rgba(74,158,114,0.4);background:var(--green-dim);color:var(--green)}
+.btn-gauth.signed-in:hover{background:var(--red-dim);color:var(--red);border-color:rgba(192,80,80,0.35)}
+.sync-status{
+  display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);
+  font-family:'DM Mono',monospace;white-space:nowrap;
+}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.ok{background:var(--green)}
+.sync-dot.err{background:var(--red)}
+.sync-dot.busy{background:var(--gold);animation:dotPulse .9s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:.3}50%{opacity:1}}
 
-/* ─── Layout ───────────────────────────────────────────────────── */
-.app { display: flex; flex-direction: column; min-height: 100vh; }
+/* ── Export button ── */
+.btn-export-xl{padding:8px 16px;border:1px solid rgba(74,158,114,0.4);border-radius:8px;background:var(--green-dim);color:var(--green);font-size:13px;font-family:'Lora',serif;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .16s;white-space:nowrap;font-weight:600}
+.btn-export-xl:hover{background:var(--green);color:#fff;border-color:var(--green)}
 
-/* ─── Header ───────────────────────────────────────────────────── */
-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 2rem;
-  height: 62px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  backdrop-filter: blur(8px);
+/* ── Setup Banner ── */
+.setup-banner{
+  background:var(--surface);border:1px solid rgba(74,130,196,0.25);border-radius:var(--r-xl);
+  padding:1.6rem;margin-bottom:2rem;
 }
+.setup-title{font-size:14px;font-weight:600;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.setup-body{font-size:13px;color:var(--text2);line-height:1.7}
+.setup-steps{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.step{display:flex;gap:10px;align-items:flex-start}
+.step-num{
+  width:22px;height:22px;border-radius:50%;background:var(--blue-dim);border:1px solid rgba(74,130,196,0.3);
+  color:var(--blue);font-size:11px;font-family:'DM Mono',monospace;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.step-text{font-size:12px;color:var(--text2);line-height:1.6}
+.step-text a{color:var(--blue);text-decoration:none}
+.step-text a:hover{text-decoration:underline}
+.step-text code{background:var(--surface2);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
+.setup-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:560px){.setup-inputs{grid-template-columns:1fr}}
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.02em;
-}
-.logo i { font-size: 22px; }
-.logo-sub {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--text3);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-left: 6px;
-  align-self: flex-end;
-  margin-bottom: 2px;
-}
+/* ── Main ── */
+.main{flex:1;padding:2rem;max-width:1080px;margin:0 auto;width:100%}
+.page{display:none;animation:pageIn .22s ease}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
-.nav-tabs { display: flex; gap: 4px; }
-.nav-tab {
-  padding: 7px 18px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: none;
-  color: var(--text2);
-  font-size: 13px;
-  font-family: 'Lora', serif;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.18s ease;
-}
-.nav-tab:hover { background: var(--surface2); color: var(--text); }
-.nav-tab.active {
-  background: var(--surface3);
-  color: var(--gold);
-  border-color: var(--border2);
-}
-.nav-badge {
-  background: var(--gold);
-  color: #1a1208;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: 'DM Mono', monospace;
-  padding: 1px 7px;
-  min-width: 22px;
-  text-align: center;
-  line-height: 1.6;
-}
-.nav-badge.green { background: var(--green); color: #fff; }
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:2rem}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.1rem 1.3rem;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-num{font-size:28px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;line-height:1;margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.09em}
+.stat-card.gold .stat-num{color:var(--gold)}
+.stat-card.green .stat-num{color:var(--green)}
+.stat-card.red .stat-num{color:var(--red)}
 
-/* ─── Main ─────────────────────────────────────────────────────── */
-.main {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1080px;
-  margin: 0 auto;
-  width: 100%;
-}
+/* ── Add panel ── */
+.add-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.6rem;margin-bottom:2rem}
+.add-panel-header{display:flex;align-items:center;gap:8px;margin-bottom:1.2rem;cursor:pointer;user-select:none}
+.add-panel-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);flex:1}
+.add-panel-toggle{font-size:18px;color:var(--text3);transition:transform .2s}
+.add-panel-toggle.open{transform:rotate(45deg)}
+.add-tabs{display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap}
+.add-tab{padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:none;color:var(--text2);font-size:12px;font-family:'Lora',serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.add-tab:hover{background:var(--surface2);color:var(--text)}
+.add-tab.active{background:var(--surface3);color:var(--gold);border-color:rgba(201,169,110,0.4)}
 
-/* ─── Pages ────────────────────────────────────────────────────── */
-.page { display: none; animation: pageIn 0.22s ease; }
-.page.active { display: block; }
-@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+/* ── Forms ── */
+input[type=text],input[type=url],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:10px 14px;font-size:13px;font-family:'Lora',serif;outline:none;transition:border-color .18s,box-shadow .18s}
+input[type=text]:focus,input[type=url]:focus,textarea:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,110,0.1)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23605a54' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+select option{background:var(--surface2);color:var(--text)}
+.input-row{display:flex;gap:10px;align-items:flex-start}
+.input-row input{flex:1}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.form-grid{grid-template-columns:1fr}}
+.form-full{grid-column:1/-1}
+.form-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
 
-/* ─── Stats Row ─────────────────────────────────────────────────── */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 2rem;
-}
-@media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 1.1rem 1.3rem;
-  transition: border-color 0.2s;
-}
-.stat-card:hover { border-color: var(--border2); }
-.stat-num {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.stat-label {
-  font-size: 11px;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-}
-.stat-card.gold .stat-num { color: var(--gold); }
-.stat-card.green .stat-num { color: var(--green); }
-.stat-card.red .stat-num { color: var(--red); }
+/* ── Buttons ── */
+.btn{padding:9px 18px;border:1px solid var(--border2);border-radius:8px;background:var(--surface3);color:var(--text);font-size:13px;font-family:'Lora',serif;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:all .16s;text-decoration:none}
+.btn:hover{background:var(--surface4);border-color:var(--border3)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--gold);color:#1a1208;border-color:var(--gold);font-weight:600}
+.btn-primary:hover{background:var(--gold2);border-color:var(--gold2);color:#1a1208}
+.btn-approve{background:var(--green-dim);color:var(--green);border-color:rgba(74,158,114,0.35)}
+.btn-approve:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-reject{background:var(--red-dim);color:var(--red);border-color:rgba(192,80,80,0.35)}
+.btn-reject:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{padding:6px 10px}
+.btn-ghost{background:none;border-color:transparent;color:var(--text3)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text2);border-color:var(--border)}
 
-/* ─── Add Panel ─────────────────────────────────────────────────── */
-.add-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-xl);
-  padding: 1.6rem;
-  margin-bottom: 2rem;
-}
-.add-panel-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1.2rem;
-  cursor: pointer;
-  user-select: none;
-}
-.add-panel-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--gold);
-  flex: 1;
-}
-.add-panel-toggle {
-  font-size: 18px;
-  color: var(--text3);
-  transition: transform 0.2s;
-}
-.add-panel-toggle.open { transform: rotate(45deg); }
+/* ── File drop ── */
+.file-drop{border:1.5px dashed var(--border2);border-radius:var(--r);padding:2rem;text-align:center;cursor:pointer;transition:all .2s;color:var(--text3);font-size:13px}
+.file-drop:hover,.file-drop.drag{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.file-drop .drop-icon{font-size:32px;display:block;margin-bottom:8px}
+.file-drop .drop-sub{font-size:11px;margin-top:5px;opacity:.6}
+input[type=file]{display:none}
 
-.add-tabs { display: flex; gap: 6px; margin-bottom: 1.2rem; }
-.add-tab {
-  padding: 7px 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: none;
-  color: var(--text2);
-  font-size: 12px;
-  font-family: 'Lora', serif;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-.add-tab:hover { background: var(--surface2); color: var(--text); }
-.add-tab.active {
-  background: var(--surface3);
-  color: var(--gold);
-  border-color: rgba(201,169,110,0.4);
-}
+/* ── Loading ── */
+.loading-wrap{margin-top:12px}
+.loading-bar{height:2px;background:var(--gold);border-radius:2px;animation:loadPulse 1.4s ease-in-out infinite;width:100%}
+@keyframes loadPulse{0%,100%{opacity:.3}50%{opacity:1}}
+.loading-text{font-size:12px;color:var(--text3);margin-top:6px}
 
-/* ─── Form Elements ─────────────────────────────────────────────── */
-input[type=text],
-input[type=url],
-textarea,
-select {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 10px 14px;
-  font-size: 13px;
-  font-family: 'Lora', serif;
-  outline: none;
-  transition: border-color 0.18s, box-shadow 0.18s;
-}
-input[type=text]:focus,
-input[type=url]:focus,
-textarea:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201,169,110,0.1);
-}
-input::placeholder, textarea::placeholder { color: var(--text3); }
-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+/* ── Filters ── */
+.filters-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:280px}
+.search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 12px 7px 34px;font-size:13px;font-family:'Lora',serif;outline:none;transition:border-color .18s}
+.search-input:focus{border-color:var(--gold)}
+.search-input::placeholder{color:var(--text3)}
+.filter-pill{padding:5px 14px;border:1px solid var(--border);border-radius:20px;background:none;color:var(--text2);font-size:12px;font-family:'Lora',serif;cursor:pointer;transition:all .15s}
+.filter-pill:hover{border-color:var(--border2);color:var(--text)}
+.filter-pill.active{border-color:rgba(201,169,110,0.5);color:var(--gold);background:var(--gold-dim)}
 
-.input-row { display: flex; gap: 10px; align-items: flex-start; }
-.input-row input { flex: 1; }
+/* ── Cards ── */
+.research-list{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.4rem 1.6rem;transition:border-color .2s;animation:cardIn .25s ease;position:relative;overflow:hidden}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#444;border-radius:3px 0 0 3px}
+.card.pending::before{background:var(--gold)}
+.card.approved::before{background:var(--green)}
+.card.rejected::before{background:var(--red);opacity:.5}
+.card.rejected{opacity:.68}
+.card:hover{border-color:var(--border2)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:10px}
+.card-title{font-size:15px;font-weight:600;color:var(--text);line-height:1.45;flex:1}
+.status-tag{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-family:'DM Mono',monospace;white-space:nowrap;flex-shrink:0}
+.tag-pending{background:rgba(201,169,110,0.12);color:var(--gold)}
+.tag-approved{background:var(--green-dim);color:var(--green)}
+.tag-rejected{background:var(--red-dim);color:var(--red)}
+.card-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.meta-item{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.meta-item i{font-size:12px}
+.source-tag{padding:2px 9px;border-radius:6px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-family:'DM Mono',monospace;background:rgba(201,169,110,0.08);color:var(--gold);border:1px solid rgba(201,169,110,0.22)}
+.card-abstract{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-abstract.expanded{display:block;-webkit-line-clamp:unset}
+.card-abstract em{color:var(--text3);font-style:italic}
+.card-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)}
+.card-footer .spacer{flex:1}
+.sync-indicator{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px}
 
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
-.form-full { grid-column: 1 / -1; }
+/* ── Exclusion block ── */
+.exclusion-block{margin-top:14px;padding:12px 14px;background:rgba(192,80,80,0.06);border:1px solid rgba(192,80,80,0.18);border-left:3px solid var(--red);border-radius:0 8px 8px 0}
+.exclusion-label{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--red);font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.exclusion-input{width:100%;background:rgba(192,80,80,0.07);border:1px solid rgba(192,80,80,0.22);border-radius:6px;color:var(--text);padding:8px 11px;font-size:12px;font-family:'Lora',serif;resize:none;outline:none;min-height:56px;line-height:1.55;transition:border-color .15s}
+.exclusion-input:focus{border-color:var(--red);box-shadow:0 0 0 2px rgba(192,80,80,0.1)}
+.exclusion-input::placeholder{color:rgba(192,80,80,0.38)}
+.exclusion-presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.preset-btn{padding:3px 10px;border:1px solid rgba(192,80,80,0.22);border-radius:20px;background:none;color:rgba(192,80,80,0.65);font-size:11px;font-family:'Lora',serif;cursor:pointer;transition:all .12s}
+.preset-btn:hover{background:var(--red-dim);color:var(--red);border-color:rgba(192,80,80,0.5)}
 
-/* ─── Buttons ───────────────────────────────────────────────────── */
-.btn {
-  padding: 9px 18px;
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  background: var(--surface3);
-  color: var(--text);
-  font-size: 13px;
-  font-family: 'Lora', serif;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  white-space: nowrap;
-  transition: all 0.16s;
-  text-decoration: none;
-}
-.btn:hover { background: var(--surface4); border-color: var(--border3); }
-.btn:active { transform: scale(0.98); }
+/* ── Note ── */
+.note-input{width:100%;margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:12px;font-family:'Lora',serif;resize:none;outline:none;min-height:58px;transition:border-color .15s}
+.note-input:focus{border-color:var(--gold)}
+.note-input::placeholder{color:var(--text3)}
+.card-note{margin-top:10px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:12px;color:var(--text2);font-style:italic;line-height:1.6}
 
-.btn-primary {
-  background: var(--gold);
-  color: #1a1208;
-  border-color: var(--gold);
-  font-weight: 600;
-}
-.btn-primary:hover { background: var(--gold2); border-color: var(--gold2); color: #1a1208; }
+/* ── Empty ── */
+.empty{text-align:center;padding:5rem 2rem;color:var(--text3)}
+.empty i{font-size:44px;display:block;margin-bottom:1rem;opacity:.3}
+.empty p{font-size:15px;line-height:1.7}
 
-.btn-approve {
-  background: var(--green-dim);
-  color: var(--green);
-  border-color: rgba(74,158,114,0.35);
-}
-.btn-approve:hover { background: var(--green); color: #fff; border-color: var(--green); }
+/* ── Approved page ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;gap:1rem;flex-wrap:wrap}
+.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text3);margin-top:3px}
+.approved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.approved-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:var(--r-xl);padding:1.3rem;animation:cardIn .25s ease;display:flex;flex-direction:column;gap:10px}
+.approved-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.45}
+.approved-abstract{font-size:12px;color:var(--text2);line-height:1.7;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+.approved-footer{display:flex;gap:8px;align-items:center;padding-top:8px;border-top:1px solid var(--border)}
+.approved-note{padding:7px 10px;background:var(--surface2);border-left:2px solid var(--green);border-radius:0 6px 6px 0;font-size:11px;color:var(--text2);font-style:italic}
 
-.btn-reject {
-  background: var(--red-dim);
-  color: var(--red);
-  border-color: rgba(192,80,80,0.35);
-}
-.btn-reject:hover { background: var(--red); color: #fff; border-color: var(--red); }
+/* ── Toast ── */
+#toast{position:fixed;bottom:28px;right:28px;background:var(--surface3);border:1px solid var(--border2);border-radius:10px;padding:11px 18px;font-size:13px;color:var(--text);z-index:9999;display:flex;align-items:center;gap:9px;max-width:360px;pointer-events:none;opacity:0;transform:translateY(12px);transition:opacity .25s,transform .25s}
+#toast.show{opacity:1;transform:none}
+#toast.ok i{color:var(--green)}
+#toast.err i{color:var(--red)}
+#toast.info i{color:var(--gold)}
+#toast.sync i{color:var(--blue)}
 
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn-icon { padding: 6px 10px; }
-
-.btn-ghost {
-  background: none;
-  border-color: transparent;
-  color: var(--text3);
-}
-.btn-ghost:hover { background: var(--surface2); color: var(--text2); border-color: var(--border); }
-
-/* ─── File Drop ─────────────────────────────────────────────────── */
-.file-drop {
-  border: 1.5px dashed var(--border2);
-  border-radius: var(--r);
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--text3);
-  font-size: 13px;
-}
-.file-drop:hover,
-.file-drop.drag {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: var(--gold-dim);
-}
-.file-drop .drop-icon { font-size: 32px; display: block; margin-bottom: 8px; }
-.file-drop .drop-sub { font-size: 11px; margin-top: 5px; opacity: 0.6; }
-input[type=file] { display: none; }
-
-/* ─── Loading Bar ───────────────────────────────────────────────── */
-.loading-wrap { margin-top: 12px; }
-.loading-bar {
-  height: 2px;
-  background: var(--gold);
-  border-radius: 2px;
-  animation: loadPulse 1.4s ease-in-out infinite;
-  width: 100%;
-}
-@keyframes loadPulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
-.loading-text { font-size: 12px; color: var(--text3); margin-top: 6px; }
-
-/* ─── Filters ───────────────────────────────────────────────────── */
-.filters-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-}
-.search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 280px; }
-.search-wrap i {
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text3);
-  font-size: 15px;
-  pointer-events: none;
-}
-.search-input {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 7px 12px 7px 34px;
-  font-size: 13px;
-  font-family: 'Lora', serif;
-  outline: none;
-  transition: border-color 0.18s;
-}
-.search-input:focus { border-color: var(--gold); }
-.search-input::placeholder { color: var(--text3); }
-
-.filter-pill {
-  padding: 5px 14px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: none;
-  color: var(--text2);
-  font-size: 12px;
-  font-family: 'Lora', serif;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.filter-pill:hover { border-color: var(--border2); color: var(--text); }
-.filter-pill.active {
-  border-color: rgba(201,169,110,0.5);
-  color: var(--gold);
-  background: var(--gold-dim);
-}
-
-/* ─── Research Cards ────────────────────────────────────────────── */
-.research-list { display: flex; flex-direction: column; gap: 14px; }
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-xl);
-  padding: 1.4rem 1.6rem;
-  transition: border-color 0.2s, transform 0.15s;
-  animation: cardIn 0.25s ease;
-  position: relative;
-  overflow: hidden;
-}
-@keyframes cardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
-.card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--muted2);
-  border-radius: 3px 0 0 3px;
-}
-.card.pending::before { background: var(--gold); }
-.card.approved::before { background: var(--green); }
-.card.rejected::before { background: var(--red); opacity: 0.5; }
-.card.rejected { opacity: 0.65; }
-.card:hover { border-color: var(--border2); }
-
-.card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 10px;
-}
-.card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.45;
-  flex: 1;
-}
-.status-tag {
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: 'DM Mono', monospace;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.tag-pending { background: rgba(201,169,110,0.12); color: var(--gold); }
-.tag-approved { background: var(--green-dim); color: var(--green); }
-.tag-rejected { background: var(--red-dim); color: var(--red); }
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.meta-item {
-  font-size: 11px;
-  color: var(--text3);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.meta-item i { font-size: 12px; }
-
-.card-abstract {
-  font-size: 13px;
-  color: var(--text2);
-  line-height: 1.75;
-  margin-bottom: 14px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.card-abstract.expanded { display: block; -webkit-line-clamp: unset; }
-.card-abstract em { color: var(--text3); font-style: italic; }
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-.card-footer .spacer { flex: 1; }
-
-.card-note {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-left: 2px solid var(--gold);
-  border-radius: 0 8px 8px 0;
-  font-size: 12px;
-  color: var(--text2);
-  font-style: italic;
-  line-height: 1.6;
-}
-.note-input {
-  width: 100%;
-  margin-top: 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 8px 12px;
-  font-size: 12px;
-  font-family: 'Lora', serif;
-  resize: none;
-  outline: none;
-  min-height: 60px;
-  transition: border-color 0.15s;
-}
-.note-input:focus { border-color: var(--gold); }
-.note-input::placeholder { color: var(--text3); }
-
-/* ─── Empty State ───────────────────────────────────────────────── */
-.empty {
-  text-align: center;
-  padding: 5rem 2rem;
-  color: var(--text3);
-}
-.empty i { font-size: 44px; display: block; margin-bottom: 1rem; opacity: 0.3; }
-.empty p { font-size: 15px; line-height: 1.7; }
-
-/* ─── Approved Page ─────────────────────────────────────────────── */
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-}
-.page-sub {
-  font-size: 13px;
-  color: var(--text3);
-  margin-top: 3px;
-}
-
-.approved-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 14px;
-}
-.approved-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 2px solid var(--green);
-  border-radius: var(--r-xl);
-  padding: 1.3rem;
-  animation: cardIn 0.25s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.approved-card:hover { border-left-color: rgba(74,158,114,0.4); border-right-color: rgba(74,158,114,0.4); border-bottom-color: rgba(74,158,114,0.4); }
-.approved-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.45;
-}
-.approved-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.approved-abstract {
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.7;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  flex: 1;
-}
-.approved-footer {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
-.approved-note {
-  padding: 7px 10px;
-  background: var(--surface2);
-  border-left: 2px solid var(--green);
-  border-radius: 0 6px 6px 0;
-  font-size: 11px;
-  color: var(--text2);
-  font-style: italic;
-}
-
-/* ─── Toast ─────────────────────────────────────────────────────── */
-#toast {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  background: var(--surface3);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 11px 18px;
-  font-size: 13px;
-  color: var(--text);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  max-width: 320px;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.25s, transform 0.25s;
-}
-#toast.show { opacity: 1; transform: none; }
-#toast.ok i { color: var(--green); }
-#toast.err i { color: var(--red); }
-#toast.info i { color: var(--gold); }
-
-/* ─── Divider ───────────────────────────────────────────────────── */
-.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
-
-/* ─── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .main { padding: 1rem; }
-  header { padding: 0 1rem; }
-  .logo-sub { display: none; }
-  .nav-tab span.label { display: none; }
-  .approved-grid { grid-template-columns: 1fr; }
-}
+@media(max-width:640px){.main{padding:1rem}header{padding:1rem}.logo-sub{display:none}.nav-tab .label{display:none}.approved-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <div class="app">
 
-  <!-- ── Header ───────────────────────────────────────────────── -->
+  <!-- ══ HEADER ══ -->
   <header>
     <div class="logo">
       <i class="ti ti-microscope" aria-hidden="true"></i>
       ResearchFilter
-      <span class="logo-sub">Review System</span>
+      <span class="logo-sub">× Google Sheets</span>
     </div>
-    <nav class="nav-tabs" role="navigation" aria-label="Main navigation">
-      <button class="nav-tab active" onclick="switchPage('review')" id="nav-review" aria-label="Review queue">
-        <i class="ti ti-list-check" aria-hidden="true"></i>
-        <span class="label">Review Queue</span>
-        <span class="nav-badge" id="badge-pending">0</span>
+    <div class="header-right">
+      <!-- Sync status -->
+      <div class="sync-status" id="sync-status">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Not connected</span>
+      </div>
+      <!-- Google Sign-in -->
+      <button class="btn-gauth" id="auth-btn" onclick="handleAuthClick()">
+        <i class="ti ti-brand-google" aria-hidden="true"></i>
+        <span id="auth-label">Sign in with Google</span>
       </button>
-      <button class="nav-tab" onclick="switchPage('approved')" id="nav-approved" aria-label="Approved research">
-        <i class="ti ti-circle-check" aria-hidden="true"></i>
-        <span class="label">Approved</span>
-        <span class="nav-badge green" id="badge-approved">0</span>
+      <!-- Nav tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="switchPage('review')" id="nav-review">
+          <i class="ti ti-list-check" aria-hidden="true"></i>
+          <span class="label">Review Queue</span>
+          <span class="nav-badge" id="badge-pending">0</span>
+        </button>
+        <button class="nav-tab" onclick="switchPage('approved')" id="nav-approved">
+          <i class="ti ti-circle-check" aria-hidden="true"></i>
+          <span class="label">Approved</span>
+          <span class="nav-badge green" id="badge-approved">0</span>
+        </button>
+      </nav>
+      <button class="btn-export-xl" onclick="exportExcel()">
+        <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Export Excel
       </button>
-    </nav>
+    </div>
   </header>
 
-  <main class="main" role="main">
+  <main class="main">
 
-    <!-- ════════════════════════════════════════════════════════════
-         PAGE: REVIEW
-         ════════════════════════════════════════════════════════════ -->
-    <section class="page active" id="page-review" aria-label="Review Queue">
+    <!-- ── Setup Banner (shown until configured) ── -->
+    <div class="setup-banner" id="setup-banner">
+      <div class="setup-title">
+        <i class="ti ti-database" aria-hidden="true"></i>
+        Connect to Google Sheets — One-time setup
+      </div>
+      <div class="setup-body">
+        This app uses <strong>your Google Sheet as the database</strong>. All entries are stored and synced live.
+        Follow the steps below to connect:
+      </div>
+      <div class="setup-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> → Create a project → Enable <strong>Google Sheets API</strong> and <strong>Google Drive API</strong>.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            Go to <strong>APIs &amp; Services → Credentials</strong> → Create <strong>OAuth 2.0 Client ID</strong> (Web application). Add your file's origin to <em>Authorised JavaScript origins</em> (e.g. <code>http://localhost</code> or <code>file://</code> or your GitHub Pages URL).
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            Copy your <strong>Client ID</strong> and paste it below. The Sheet ID is pre-filled from your link.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            Make sure your Google Sheet is <strong>shared with your Google account</strong> (or set to "Anyone with the link can edit" for simpler setup).
+          </div>
+        </div>
+      </div>
+      <div class="setup-inputs">
+        <div>
+          <div class="form-label">Google OAuth Client ID *</div>
+          <input type="text" id="cfg-client-id" placeholder="xxxx.apps.googleusercontent.com" />
+        </div>
+        <div>
+          <div class="form-label">Google Sheet ID *</div>
+          <input type="text" id="cfg-sheet-id" value="1CFFUQI77JnjVmlEztHVyUTLD-wfIm0RZtdWOH8DM0L8" />
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveConfig()">
+          <i class="ti ti-plug" aria-hidden="true"></i> Save &amp; Connect
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="dismissSetup()" style="font-size:12px">
+          Use offline only (localStorage)
+        </button>
+      </div>
+    </div>
 
-      <!-- Stats -->
+    <!-- ══ PAGE: REVIEW ══ -->
+    <section class="page active" id="page-review">
       <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-num" id="s-total">0</div>
-          <div class="stat-label">Total</div>
-        </div>
-        <div class="stat-card gold">
-          <div class="stat-num" id="s-pending">0</div>
-          <div class="stat-label">Pending</div>
-        </div>
-        <div class="stat-card green">
-          <div class="stat-num" id="s-approved">0</div>
-          <div class="stat-label">Approved</div>
-        </div>
-        <div class="stat-card red">
-          <div class="stat-num" id="s-rejected">0</div>
-          <div class="stat-label">Rejected</div>
-        </div>
+        <div class="stat-card"><div class="stat-num" id="s-total">0</div><div class="stat-label">Total</div></div>
+        <div class="stat-card gold"><div class="stat-num" id="s-pending">0</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card green"><div class="stat-num" id="s-approved">0</div><div class="stat-label">Approved</div></div>
+        <div class="stat-card red"><div class="stat-num" id="s-rejected">0</div><div class="stat-label">Rejected</div></div>
       </div>
 
       <!-- Add Panel -->
       <div class="add-panel">
         <div class="add-panel-header" onclick="toggleAddPanel()">
-          <i class="ti ti-plus-circle" aria-hidden="true" style="color:var(--gold);font-size:16px;"></i>
+          <i class="ti ti-plus-circle" style="color:var(--gold);font-size:16px" aria-hidden="true"></i>
           <span class="add-panel-title">Add Research Entry</span>
           <i class="ti ti-plus add-panel-toggle open" id="add-toggle" aria-hidden="true"></i>
         </div>
-
         <div id="add-body">
           <div class="add-tabs">
-            <button class="add-tab active" onclick="switchAddTab('url')" id="tab-url">
-              <i class="ti ti-link" aria-hidden="true"></i> From URL
-            </button>
-            <button class="add-tab" onclick="switchAddTab('manual')" id="tab-manual">
-              <i class="ti ti-pencil" aria-hidden="true"></i> Manual
-            </button>
-            <button class="add-tab" onclick="switchAddTab('pdf')" id="tab-pdf">
-              <i class="ti ti-file-type-pdf" aria-hidden="true"></i> PDF Upload
-            </button>
+            <button class="add-tab active" onclick="switchAddTab('url')" id="tab-url"><i class="ti ti-link"></i> From URL</button>
+            <button class="add-tab" onclick="switchAddTab('manual')" id="tab-manual"><i class="ti ti-pencil"></i> Manual</button>
+            <button class="add-tab" onclick="switchAddTab('pdf')" id="tab-pdf"><i class="ti ti-file-type-pdf"></i> PDF Upload</button>
           </div>
 
-          <!-- URL Panel -->
+          <!-- URL -->
           <div id="panel-url">
-            <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">
-              Paste a DOI, PubMed URL, arXiv link, or any research page. Metadata will be extracted automatically using AI.
-            </p>
-            <div class="input-row">
-              <input type="url" id="url-input" placeholder="https://doi.org/10.xxxx/... or any research URL" aria-label="Research URL" />
-              <button class="btn btn-primary" onclick="addFromUrl()" id="url-btn">
-                <i class="ti ti-sparkles" aria-hidden="true"></i> Fetch &amp; Add
-              </button>
-            </div>
-            <div class="loading-wrap" id="url-loading" style="display:none">
-              <div class="loading-bar"></div>
-              <div class="loading-text">Fetching metadata via AI…</div>
-            </div>
-          </div>
-
-          <!-- Manual Panel -->
-          <div id="panel-manual" style="display:none">
-            <div class="form-grid">
-              <input class="form-full" type="text" id="m-title" placeholder="Title *" aria-label="Title" />
-              <input type="text" id="m-authors" placeholder="Authors (Smith J, et al.)" aria-label="Authors" />
-              <input type="text" id="m-journal" placeholder="Journal / Conference" aria-label="Journal" />
-              <input type="text" id="m-year" placeholder="Year" aria-label="Year" />
-              <input type="url" id="m-url" placeholder="Link to full paper (optional)" aria-label="Paper URL" />
-              <textarea class="form-full" id="m-abstract" placeholder="Abstract / Summary *" aria-label="Abstract"></textarea>
-              <div class="form-full">
-                <button class="btn btn-primary" onclick="addManual()">
-                  <i class="ti ti-plus" aria-hidden="true"></i> Add Research
-                </button>
+            <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Paste a DOI, PubMed, arXiv, or any research URL. Set ANTHROPIC_API_KEY constant for auto-extraction.</p>
+            <div class="form-grid" style="margin-bottom:10px">
+              <div>
+                <div class="form-label">Source Database</div>
+                <select id="url-source"><option value="PubMed">PubMed</option><option value="ScienceDirect">ScienceDirect</option><option value="Google Scholar">Google Scholar</option><option value="Cochrane">Cochrane</option><option value="Embase">Embase</option><option value="Other">Other</option></select>
+              </div>
+              <div>
+                <div class="form-label">Search Period / n</div>
+                <input type="text" id="url-period" placeholder="e.g. 10 y, n=78" />
               </div>
             </div>
+            <div class="input-row">
+              <input type="url" id="url-input" placeholder="https://doi.org/10.xxxx/..." />
+              <button class="btn btn-primary" onclick="addFromUrl()" id="url-btn"><i class="ti ti-sparkles"></i> Fetch &amp; Add</button>
+            </div>
+            <div class="loading-wrap" id="url-loading" style="display:none"><div class="loading-bar"></div><div class="loading-text">Fetching via AI…</div></div>
           </div>
 
-          <!-- PDF Panel -->
-          <div id="panel-pdf" style="display:none">
-            <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">
-              Upload a PDF and the title &amp; abstract will be extracted automatically from the document text.
-            </p>
-            <div class="file-drop" id="file-drop"
-              onclick="document.getElementById('pdf-file').click()"
-              ondragover="event.preventDefault();this.classList.add('drag')"
-              ondragleave="this.classList.remove('drag')"
-              ondrop="handleDrop(event)"
-              role="button"
-              tabindex="0"
-              aria-label="Upload PDF file"
-              onkeydown="if(event.key==='Enter')document.getElementById('pdf-file').click()">
-              <i class="ti ti-file-upload drop-icon" aria-hidden="true"></i>
-              Drop PDF here or click to browse
-              <div class="drop-sub">Abstract &amp; title extracted automatically · PDF.js powered</div>
-            </div>
-            <input type="file" id="pdf-file" accept=".pdf" onchange="handlePdfUpload(event)" aria-hidden="true" />
-            <div class="loading-wrap" id="pdf-loading" style="display:none">
-              <div class="loading-bar"></div>
-              <div class="loading-text" id="pdf-loading-text">Reading PDF…</div>
+          <!-- Manual -->
+          <div id="panel-manual" style="display:none">
+            <div class="form-grid">
+              <div>
+                <div class="form-label">Source Database *</div>
+                <select id="m-source"><option value="PubMed">PubMed</option><option value="ScienceDirect">ScienceDirect</option><option value="Google Scholar">Google Scholar</option><option value="Cochrane">Cochrane</option><option value="Embase">Embase</option><option value="Other">Other</option></select>
+              </div>
+              <div>
+                <div class="form-label">Search Period / n</div>
+                <input type="text" id="m-period" placeholder="e.g. 10 y, n=78" />
+              </div>
+              <input class="form-full" type="text" id="m-title" placeholder="Title *" />
+              <input type="text" id="m-authors" placeholder="Authors (Smith J, et al.)" />
+              <input type="text" id="m-journal" placeholder="Journal / Conference" />
+              <input type="text" id="m-year" placeholder="Year" />
+              <input class="form-full" type="url" id="m-url" placeholder="Link to full paper (optional)" />
+              <textarea class="form-full" id="m-abstract" placeholder="Abstract / Summary *"></textarea>
+              <div class="form-full"><button class="btn btn-primary" onclick="addManual()"><i class="ti ti-plus"></i> Add Research</button></div>
             </div>
           </div>
+
+          <!-- PDF -->
+          <div id="panel-pdf" style="display:none">
+            <div class="form-grid" style="margin-bottom:12px">
+              <div>
+                <div class="form-label">Source Database *</div>
+                <select id="pdf-source"><option value="PubMed">PubMed</option><option value="ScienceDirect">ScienceDirect</option><option value="Google Scholar">Google Scholar</option><option value="Cochrane">Cochrane</option><option value="Embase">Embase</option><option value="Other">Other</option></select>
+              </div>
+              <div>
+                <div class="form-label">Search Period / n</div>
+                <input type="text" id="pdf-period" placeholder="e.g. 10 y, n=78" />
+              </div>
+            </div>
+            <div class="file-drop" id="file-drop" onclick="document.getElementById('pdf-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)" role="button" tabindex="0">
+              <i class="ti ti-file-upload drop-icon"></i>
+              Drop PDF here or click to browse
+              <div class="drop-sub">Title &amp; abstract extracted automatically · PDF.js</div>
+            </div>
+            <input type="file" id="pdf-file" accept=".pdf" onchange="handlePdfUpload(event)" />
+            <div class="loading-wrap" id="pdf-loading" style="display:none"><div class="loading-bar"></div><div class="loading-text" id="pdf-loading-text">Reading PDF…</div></div>
+          </div>
         </div>
-      </div><!-- /add-panel -->
+      </div>
 
       <!-- Filters -->
       <div class="filters-bar">
         <div class="search-wrap">
-          <i class="ti ti-search" aria-hidden="true"></i>
-          <input class="search-input" type="search" id="search" placeholder="Search title or abstract…"
-            oninput="renderReview()" aria-label="Search research entries" />
+          <i class="ti ti-search"></i>
+          <input class="search-input" type="search" id="search" placeholder="Search title or abstract…" oninput="renderReview()" />
         </div>
         <button class="filter-pill active" onclick="setFilter('all')" id="f-all">All</button>
         <button class="filter-pill" onclick="setFilter('pending')" id="f-pending">Pending</button>
         <button class="filter-pill" onclick="setFilter('approved')" id="f-approved">Approved</button>
         <button class="filter-pill" onclick="setFilter('rejected')" id="f-rejected">Rejected</button>
         <div style="flex:1;min-width:4px"></div>
-        <button class="btn btn-ghost btn-sm" onclick="clearRejected()" title="Remove all rejected entries">
-          <i class="ti ti-trash" aria-hidden="true"></i> Clear Rejected
+        <button class="btn btn-ghost btn-sm" onclick="manualSync()" title="Reload from Google Sheets">
+          <i class="ti ti-refresh"></i> Sync
         </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearRejected()"><i class="ti ti-trash"></i> Clear Rejected</button>
       </div>
 
-      <!-- List -->
-      <div class="research-list" id="review-list" aria-live="polite"></div>
+      <div class="research-list" id="review-list"></div>
+    </section>
 
-    </section><!-- /page-review -->
-
-
-    <!-- ════════════════════════════════════════════════════════════
-         PAGE: APPROVED
-         ════════════════════════════════════════════════════════════ -->
-    <section class="page" id="page-approved" aria-label="Approved Research">
+    <!-- ══ PAGE: APPROVED ══ -->
+    <section class="page" id="page-approved">
       <div class="page-header">
         <div>
           <div class="page-title">Approved Research</div>
-          <div class="page-sub">Manually approved papers ready for use</div>
+          <div class="page-sub">Manually approved papers — synced to Google Sheets</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-sm" onclick="exportCSV()">
-            <i class="ti ti-table-export" aria-hidden="true"></i> Export CSV
-          </button>
-          <button class="btn btn-sm" onclick="exportJSON()">
-            <i class="ti ti-braces" aria-hidden="true"></i> Export JSON
-          </button>
-        </div>
+        <button class="btn-export-xl" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Export Excel</button>
       </div>
-      <div class="approved-grid" id="approved-list" aria-live="polite"></div>
+      <div class="approved-grid" id="approved-list"></div>
     </section>
 
   </main>
-</div><!-- /app -->
-
-<!-- Toast -->
-<div id="toast" role="status" aria-live="polite">
-  <i class="ti ti-info-circle" aria-hidden="true" id="toast-icon"></i>
-  <span id="toast-msg"></span>
 </div>
 
+<div id="toast" role="status"><i class="ti ti-info-circle" id="toast-icon"></i><span id="toast-msg"></span></div>
 
+<!-- ════════════════════════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════════════════════════ -->
 <script>
-/* ────────────────────────────────────────────────────────────────
-   CONFIG — set your Anthropic API key here if you want AI features
-   (URL metadata extraction). Leave empty to use manual mode only.
-   WARNING: Do NOT commit your real API key to a public repository.
-   Use environment variables or a backend proxy in production.
-   ────────────────────────────────────────────────────────────────*/
-const ANTHROPIC_API_KEY = ''; // ← paste key here for URL fetch feature
+/* ── App config ─────────────────────────────────────────────────────
+   OPTIONAL: Set your Anthropic API key for AI URL metadata extraction.
+   Do NOT commit real keys to public repos.
+──────────────────────────────────────────────────────────────────── */
+const ANTHROPIC_API_KEY = ''; // optional — for AI URL fetch feature
 
-/* ─── State ─────────────────────────────────────────────────────── */
+/* ── Google Sheets config ───────────────────────────────────────────
+   Sheet columns (1-indexed):
+   A=id  B=status  C=title  D=authors  E=journal  F=year
+   G=abstract  H=url  I=source  J=period  K=type  L=exclusionReason
+   M=note  N=added
+──────────────────────────────────────────────────────────────────── */
+const SHEET_RANGE = 'Papers!A:N';
+const SHEET_HEADER = ['id','status','title','authors','journal','year','abstract','url','source','period','type','exclusionReason','note','added'];
+const COL = Object.fromEntries(SHEET_HEADER.map((k,i) => [k, i]));
+
+/* ── Runtime state ───────────────────────────────────────────────── */
 let papers = [];
 let currentFilter = 'all';
-let currentPage = 'review';
 let addPanelOpen = true;
+let gConfig = { clientId: '', sheetId: '1CFFUQI77JnjVmlEztHVyUTLD-wfIm0RZtdWOH8DM0L8' };
+let tokenClient = null;
+let accessToken = null;
+let isSignedIn = false;
+let syncQueue = Promise.resolve(); // serialise all sheet writes
 
-// Load from localStorage
+/* ── Persist config in localStorage ─────────────────────────────── */
 try {
-  const saved = localStorage.getItem('rf_papers_v2');
-  if (saved) papers = JSON.parse(saved);
-} catch(e) { papers = []; }
+  const c = localStorage.getItem('rf_config');
+  if (c) { const parsed = JSON.parse(c); gConfig = { ...gConfig, ...parsed }; }
+  const lp = localStorage.getItem('rf_papers_v4');
+  if (lp) papers = JSON.parse(lp);
+} catch(e) {}
 
-function save() {
-  try { localStorage.setItem('rf_papers_v2', JSON.stringify(papers)); }
-  catch(e) { toast('Storage error — data may not be saved', 'err'); }
+function saveLocal() {
+  try { localStorage.setItem('rf_papers_v4', JSON.stringify(papers)); } catch(e) {}
 }
 
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+/* ── Pre-fill config inputs ─────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cfg-client-id').value = gConfig.clientId || '';
+  document.getElementById('cfg-sheet-id').value  = gConfig.sheetId  || '';
+  if (gConfig.clientId) initGoogleAuth(gConfig.clientId);
+  if (gConfig.clientId && gConfig.sheetId) hideBanner();
+  renderReview();
+  updateStats();
+});
+
+/* ─────────────────────────────────────────────────────────────────
+   GOOGLE AUTH
+───────────────────────────────────────────────────────────────── */
+function saveConfig() {
+  const clientId = document.getElementById('cfg-client-id').value.trim();
+  const sheetId  = document.getElementById('cfg-sheet-id').value.trim();
+  if (!clientId) { toast('Client ID is required', 'err'); return; }
+  if (!sheetId)  { toast('Sheet ID is required', 'err'); return; }
+  gConfig = { clientId, sheetId };
+  try { localStorage.setItem('rf_config', JSON.stringify(gConfig)); } catch(e) {}
+  hideBanner();
+  initGoogleAuth(clientId);
+  toast('Config saved — click "Sign in with Google" to connect', 'info');
 }
 
-function esc(s) {
-  if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function dismissSetup() {
+  hideBanner();
+  toast('Running in offline mode — data saved to localStorage only', 'info');
 }
 
-/* ─── Navigation ────────────────────────────────────────────────── */
+function hideBanner() {
+  const b = document.getElementById('setup-banner');
+  if (b) b.style.display = 'none';
+}
+
+function initGoogleAuth(clientId) {
+  if (!window.google || !google.accounts) {
+    // GIS not loaded yet — retry
+    setTimeout(() => initGoogleAuth(clientId), 500);
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    callback: onTokenResponse,
+  });
+  setSyncStatus('idle', 'Ready to sign in');
+}
+
+function handleAuthClick() {
+  if (!gConfig.clientId) {
+    toast('Please enter your Google Client ID first', 'err');
+    document.getElementById('setup-banner').style.display = '';
+    return;
+  }
+  if (isSignedIn) {
+    // Sign out
+    google.accounts.oauth2.revoke(accessToken, () => {});
+    accessToken = null; isSignedIn = false;
+    updateAuthUI(false);
+    setSyncStatus('idle', 'Signed out');
+    toast('Signed out from Google', 'info');
+  } else {
+    if (!tokenClient) initGoogleAuth(gConfig.clientId);
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
+}
+
+function onTokenResponse(resp) {
+  if (resp.error) {
+    toast('Google auth error: ' + resp.error, 'err');
+    setSyncStatus('err', 'Auth failed');
+    return;
+  }
+  accessToken = resp.access_token;
+  isSignedIn = true;
+  updateAuthUI(true);
+  setSyncStatus('busy', 'Loading from sheet…');
+  toast('Signed in — loading data from Google Sheets…', 'sync');
+  loadFromSheet();
+}
+
+function updateAuthUI(signedIn) {
+  const btn = document.getElementById('auth-btn');
+  const lbl = document.getElementById('auth-label');
+  if (signedIn) {
+    btn.classList.add('signed-in');
+    lbl.textContent = 'Disconnect';
+  } else {
+    btn.classList.remove('signed-in');
+    lbl.textContent = 'Sign in with Google';
+  }
+}
+
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'err' ? 'err' : state === 'busy' ? 'busy' : '');
+  lbl.textContent = label;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   GOOGLE SHEETS API HELPERS
+───────────────────────────────────────────────────────────────── */
+function sheetsUrl(path) {
+  return `https://sheets.googleapis.com/v4/spreadsheets/${gConfig.sheetId}${path}`;
+}
+function authHeaders() {
+  return { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' };
+}
+
+/* Load all rows from sheet → convert to papers array */
+async function loadFromSheet() {
+  if (!isSignedIn) return;
+  setSyncStatus('busy', 'Loading…');
+  try {
+    const resp = await fetch(sheetsUrl(`/values/${encodeURIComponent(SHEET_RANGE)}`), { headers: authHeaders() });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const rows = data.values || [];
+    if (rows.length === 0) {
+      // Sheet is empty — write header row
+      await writeHeaderRow();
+      papers = [];
+    } else {
+      // First row should be header — skip it
+      const dataRows = rows[0][0] === 'id' ? rows.slice(1) : rows;
+      papers = dataRows.filter(r => r[COL.id]).map(rowToPaper);
+    }
+    saveLocal();
+    renderReview();
+    updateStats();
+    setSyncStatus('ok', `Synced · ${papers.length} entries`);
+    toast(`Loaded ${papers.length} entries from Google Sheets`, 'sync');
+  } catch(e) {
+    console.error(e);
+    setSyncStatus('err', 'Load failed');
+    toast('Failed to load from sheet: ' + e.message, 'err');
+  }
+}
+
+function rowToPaper(row) {
+  const get = i => (row[i] || '').trim();
+  return {
+    id:              get(COL.id),
+    status:          get(COL.status)   || 'pending',
+    title:           get(COL.title),
+    authors:         get(COL.authors),
+    journal:         get(COL.journal),
+    year:            get(COL.year),
+    abstract:        get(COL.abstract),
+    url:             get(COL.url),
+    source:          get(COL.source)   || 'Other',
+    period:          get(COL.period),
+    type:            get(COL.type)     || 'manual',
+    exclusionReason: get(COL.exclusionReason),
+    note:            get(COL.note),
+    added:           get(COL.added)    || new Date().toISOString(),
+    noteVisible:     false,
+  };
+}
+
+function paperToRow(p) {
+  return SHEET_HEADER.map(k => {
+    const v = p[k];
+    return (v == null || v === false) ? '' : String(v);
+  });
+}
+
+async function writeHeaderRow() {
+  await fetch(sheetsUrl(`/values/${encodeURIComponent('Papers!A1:N1')}?valueInputOption=RAW`), {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({ values: [SHEET_HEADER] })
+  });
+}
+
+/* Append a single new paper row */
+async function appendRow(paper) {
+  if (!isSignedIn) return;
+  setSyncStatus('busy', 'Saving…');
+  try {
+    await fetch(sheetsUrl(`/values/${encodeURIComponent(SHEET_RANGE)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`), {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ values: [paperToRow(paper)] })
+    });
+    setSyncStatus('ok', 'Saved to sheet');
+  } catch(e) {
+    setSyncStatus('err', 'Save failed');
+    toast('Failed to save to sheet: ' + e.message, 'err');
+  }
+}
+
+/* Rewrite the entire sheet (used for updates/deletes) */
+async function rewriteSheet() {
+  if (!isSignedIn) return;
+  setSyncStatus('busy', 'Syncing…');
+  try {
+    const allRows = [SHEET_HEADER, ...papers.map(paperToRow)];
+    // Clear existing data first
+    await fetch(sheetsUrl(`/values/${encodeURIComponent(SHEET_RANGE)}:clear`), {
+      method: 'POST', headers: authHeaders()
+    });
+    // Write fresh
+    await fetch(sheetsUrl(`/values/${encodeURIComponent(SHEET_RANGE)}?valueInputOption=RAW`), {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ values: allRows })
+    });
+    setSyncStatus('ok', `Synced · ${papers.length} entries`);
+  } catch(e) {
+    setSyncStatus('err', 'Sync failed');
+    toast('Sync error: ' + e.message, 'err');
+  }
+}
+
+/* Queue a write to avoid race conditions */
+function queueWrite(fn) {
+  syncQueue = syncQueue.then(fn).catch(console.error);
+}
+
+async function manualSync() {
+  if (!isSignedIn) { toast('Sign in with Google first', 'info'); return; }
+  await loadFromSheet();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NAVIGATION & UI
+───────────────────────────────────────────────────────────────── */
 function switchPage(p) {
-  currentPage = p;
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
   document.getElementById('nav-' + p).classList.add('active');
-  if (p === 'approved') renderApproved();
-  else renderReview();
+  if (p === 'approved') renderApproved(); else renderReview();
   updateStats();
 }
-
-/* ─── Add Panel Toggle ──────────────────────────────────────────── */
 function toggleAddPanel() {
   addPanelOpen = !addPanelOpen;
   document.getElementById('add-body').style.display = addPanelOpen ? '' : 'none';
-  const t = document.getElementById('add-toggle');
-  t.classList.toggle('open', addPanelOpen);
+  document.getElementById('add-toggle').classList.toggle('open', addPanelOpen);
 }
-
-/* ─── Add Tabs ──────────────────────────────────────────────────── */
-function switchAddTab(mode) {
-  ['url', 'manual', 'pdf'].forEach(m => {
-    document.getElementById('tab-' + m).classList.toggle('active', m === mode);
-    document.getElementById('panel-' + m).style.display = m === mode ? '' : 'none';
+function switchAddTab(m) {
+  ['url','manual','pdf'].forEach(x => {
+    document.getElementById('tab-' + x).classList.toggle('active', x === m);
+    document.getElementById('panel-' + x).style.display = x === m ? '' : 'none';
   });
 }
-
-/* ─── Filter ────────────────────────────────────────────────────── */
 function setFilter(f) {
   currentFilter = f;
   document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
@@ -911,519 +764,394 @@ function setFilter(f) {
   renderReview();
 }
 
-/* ─── Stats ─────────────────────────────────────────────────────── */
+/* ── Stats ── */
 function updateStats() {
-  const total    = papers.length;
-  const pending  = papers.filter(p => p.status === 'pending').length;
-  const approved = papers.filter(p => p.status === 'approved').length;
-  const rejected = papers.filter(p => p.status === 'rejected').length;
-  document.getElementById('s-total').textContent    = total;
-  document.getElementById('s-pending').textContent  = pending;
-  document.getElementById('s-approved').textContent = approved;
-  document.getElementById('s-rejected').textContent = rejected;
-  document.getElementById('badge-pending').textContent  = pending;
-  document.getElementById('badge-approved').textContent = approved;
+  const t  = papers.length;
+  const pn = papers.filter(p => p.status === 'pending').length;
+  const ap = papers.filter(p => p.status === 'approved').length;
+  const rj = papers.filter(p => p.status === 'rejected').length;
+  document.getElementById('s-total').textContent    = t;
+  document.getElementById('s-pending').textContent  = pn;
+  document.getElementById('s-approved').textContent = ap;
+  document.getElementById('s-rejected').textContent = rj;
+  document.getElementById('badge-pending').textContent  = pn;
+  document.getElementById('badge-approved').textContent = ap;
 }
 
-/* ─── Render Review List ────────────────────────────────────────── */
+/* ── Render Review ── */
 function renderReview() {
   const q = (document.getElementById('search').value || '').toLowerCase().trim();
-  const filtered = papers.filter(p => {
+  const list = papers.filter(p => {
     if (currentFilter !== 'all' && p.status !== currentFilter) return false;
-    if (q) {
-      const haystack = (p.title + ' ' + (p.abstract || '') + ' ' + (p.authors || '')).toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
+    if (q) { const h = (p.title + ' ' + (p.abstract||'') + ' ' + (p.authors||'')).toLowerCase(); if (!h.includes(q)) return false; }
     return true;
   });
-
   const el = document.getElementById('review-list');
-
-  if (!filtered.length) {
-    el.innerHTML = `<div class="empty">
-      <i class="ti ti-file-search"></i>
-      <p>No research entries found.<br><span style="font-size:13px;opacity:0.7">Add some above or adjust your filters.</span></p>
-    </div>`;
-    updateStats();
-    return;
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-file-search"></i><p>No entries found.<br><span style="font-size:13px;opacity:.7">Add some above or adjust filters.</span></p></div>`;
+    updateStats(); return;
   }
-
-  el.innerHTML = filtered.map(p => buildCard(p)).join('');
+  el.innerHTML = list.map(buildCard).join('');
   updateStats();
 }
 
 function buildCard(p) {
+  const typeIconMap = { url:'ti-link', pdf:'ti-file-type-pdf', manual:'ti-pencil' };
+  const tagClass = { pending:'tag-pending', approved:'tag-approved', rejected:'tag-rejected' }[p.status];
+  const tagLabel = p.status.charAt(0).toUpperCase() + p.status.slice(1);
+  const typeIcon = typeIconMap[p.type] || 'ti-file';
+
+  const exclusionBlock = `
+    <div class="exclusion-block">
+      <div class="exclusion-label"><i class="ti ti-ban"></i> Reason of Exclusion</div>
+      <textarea class="exclusion-input" id="excl-${esc(p.id)}"
+        placeholder="Enter reason of exclusion…"
+        onchange="saveExclusion('${p.id}',this.value)"
+        onblur="saveExclusion('${p.id}',this.value)"
+      >${esc(p.exclusionReason||'')}</textarea>
+      <div class="exclusion-presets">
+        <button class="preset-btn" onclick="applyPreset('${p.id}','Not related to PICO')">Not related to PICO</button>
+        <button class="preset-btn" onclick="applyPreset('${p.id}','Duplication')">Duplication</button>
+        <button class="preset-btn" onclick="applyPreset('${p.id}','Wrong study design')">Wrong study design</button>
+        <button class="preset-btn" onclick="applyPreset('${p.id}','Wrong population')">Wrong population</button>
+        <button class="preset-btn" onclick="applyPreset('${p.id}','Wrong outcome')">Wrong outcome</button>
+        <button class="preset-btn" onclick="applyPreset('${p.id}','Full text unavailable')">Full text unavailable</button>
+      </div>
+    </div>`;
+
   const noteHtml = p.noteVisible
-    ? `<textarea class="note-input" placeholder="Add reviewer note…"
-        onchange="saveNote('${p.id}', this.value)"
-        onblur="saveNote('${p.id}', this.value)">${esc(p.note || '')}</textarea>`
+    ? `<textarea class="note-input" placeholder="Reviewer note…" onchange="saveNote('${p.id}',this.value)" onblur="saveNote('${p.id}',this.value)">${esc(p.note||'')}</textarea>`
     : p.note
       ? `<div class="card-note">"${esc(p.note)}"</div>`
-      : `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px;" onclick="showNote('${p.id}')">
-           <i class="ti ti-note" aria-hidden="true"></i> Add note
-         </button>`;
-
-  const typeIconMap = { url: 'ti-link', pdf: 'ti-file-type-pdf', manual: 'ti-pencil' };
-  const typeIcon = typeIconMap[p.type] || 'ti-file';
-  const tagClass = { pending: 'tag-pending', approved: 'tag-approved', rejected: 'tag-rejected' }[p.status];
-  const tagLabel = p.status.charAt(0).toUpperCase() + p.status.slice(1);
+      : `<button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px" onclick="showNote('${p.id}')"><i class="ti ti-note"></i> Add note</button>`;
 
   return `
   <article class="card ${esc(p.status)}" id="card-${esc(p.id)}">
     <div class="card-head">
-      <h2 class="card-title">${esc(p.title) || '<em style="color:var(--text3)">Untitled</em>'}</h2>
-      <span class="status-tag ${tagClass}" aria-label="Status: ${tagLabel}">${tagLabel}</span>
+      <h2 class="card-title">${esc(p.title)||'<em style="color:var(--text3)">Untitled</em>'}</h2>
+      <span class="status-tag ${tagClass}">${tagLabel}</span>
     </div>
-
     <div class="card-meta">
-      ${p.authors ? `<span class="meta-item"><i class="ti ti-user" aria-hidden="true"></i>${esc(p.authors)}</span>` : ''}
-      ${p.journal ? `<span class="meta-item"><i class="ti ti-book" aria-hidden="true"></i>${esc(p.journal)}</span>` : ''}
-      ${p.year    ? `<span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i>${esc(p.year)}</span>` : ''}
-      <span class="meta-item"><i class="ti ${typeIcon}" aria-hidden="true"></i>${esc(p.type)}</span>
-      <span class="meta-item" style="margin-left:auto;"><i class="ti ti-clock" aria-hidden="true"></i>${formatDate(p.added)}</span>
+      ${p.source?`<span class="source-tag">${esc(p.source)}</span>`:''}
+      ${p.period?`<span class="meta-item"><i class="ti ti-calendar-stats"></i>${esc(p.period)}</span>`:''}
+      ${p.authors?`<span class="meta-item"><i class="ti ti-user"></i>${esc(p.authors)}</span>`:''}
+      ${p.journal?`<span class="meta-item"><i class="ti ti-book"></i>${esc(p.journal)}</span>`:''}
+      ${p.year?`<span class="meta-item"><i class="ti ti-calendar"></i>${esc(p.year)}</span>`:''}
+      <span class="meta-item"><i class="ti ${typeIcon}"></i>${esc(p.type)}</span>
+      <span class="meta-item" style="margin-left:auto"><i class="ti ti-clock"></i>${formatDate(p.added)}</span>
     </div>
-
-    <div class="card-abstract" id="abs-${esc(p.id)}">
-      ${p.abstract ? esc(p.abstract) : '<em>No abstract available.</em>'}
-    </div>
-
+    <div class="card-abstract" id="abs-${esc(p.id)}">${p.abstract?esc(p.abstract):'<em>No abstract available.</em>'}</div>
     <div class="card-footer">
-      <button class="btn btn-ghost btn-sm" onclick="toggleAbs('${p.id}')" aria-label="Toggle abstract">
-        <i class="ti ti-text-wrap-disabled" aria-hidden="true"></i> Expand
-      </button>
-      ${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" aria-label="Open full paper">
-        <i class="ti ti-external-link" aria-hidden="true"></i> Full Paper
-      </a>` : ''}
-
+      <button class="btn btn-ghost btn-sm" onclick="toggleAbs('${p.id}')"><i class="ti ti-text-wrap-disabled"></i> Expand</button>
+      ${p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener" class="btn btn-sm"><i class="ti ti-external-link"></i> Full Paper</a>`:''}
       <div class="spacer"></div>
-
-      ${p.status !== 'approved'
-        ? `<button class="btn btn-approve btn-sm" onclick="setStatus('${p.id}','approved')" aria-label="Approve">
-             <i class="ti ti-check" aria-hidden="true"></i> Approve
-           </button>` : ''}
-      ${p.status !== 'rejected'
-        ? `<button class="btn btn-reject btn-sm" onclick="setStatus('${p.id}','rejected')" aria-label="Reject">
-             <i class="ti ti-x" aria-hidden="true"></i> Reject
-           </button>` : ''}
-      ${p.status !== 'pending'
-        ? `<button class="btn btn-ghost btn-icon btn-sm" onclick="setStatus('${p.id}','pending')" title="Reset to pending" aria-label="Reset to pending">
-             <i class="ti ti-refresh" aria-hidden="true"></i>
-           </button>` : ''}
-      <button class="btn btn-ghost btn-icon btn-sm" onclick="deletePaper('${p.id}')" title="Delete entry" aria-label="Delete entry" style="color:var(--red)">
-        <i class="ti ti-trash" aria-hidden="true"></i>
-      </button>
+      ${p.status!=='approved'?`<button class="btn btn-approve btn-sm" onclick="setStatus('${p.id}','approved')"><i class="ti ti-check"></i> Approve</button>`:''}
+      ${p.status!=='rejected'?`<button class="btn btn-reject btn-sm" onclick="setStatus('${p.id}','rejected')"><i class="ti ti-x"></i> Reject</button>`:''}
+      ${p.status!=='pending'?`<button class="btn btn-ghost btn-icon btn-sm" onclick="setStatus('${p.id}','pending')" title="Reset to pending"><i class="ti ti-refresh"></i></button>`:''}
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="deletePaper('${p.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button>
     </div>
-
+    ${exclusionBlock}
     ${noteHtml}
   </article>`;
 }
 
-/* ─── Render Approved ───────────────────────────────────────────── */
+/* ── Render Approved ── */
 function renderApproved() {
-  const approved = papers.filter(p => p.status === 'approved');
+  const ap = papers.filter(p => p.status === 'approved');
   const el = document.getElementById('approved-list');
-
-  if (!approved.length) {
-    el.innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <i class="ti ti-circle-dashed-check"></i>
-      <p>No approved research yet.<br><span style="font-size:13px;opacity:0.7">Go to Review Queue and approve some papers.</span></p>
-    </div>`;
+  if (!ap.length) {
+    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><i class="ti ti-circle-dashed-check"></i><p>No approved research yet.</p></div>`;
     return;
   }
-
-  el.innerHTML = approved.map(p => `
+  el.innerHTML = ap.map(p => `
     <article class="approved-card">
-      <div>
-        <h2 class="approved-title">${esc(p.title) || '<em>Untitled</em>'}</h2>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <h2 class="approved-title">${esc(p.title)||'<em>Untitled</em>'}</h2>
+        ${p.source?`<span class="source-tag" style="flex-shrink:0">${esc(p.source)}</span>`:''}
       </div>
-      <div class="approved-meta">
-        ${p.authors ? `<span class="meta-item"><i class="ti ti-user" aria-hidden="true"></i>${esc(p.authors)}</span>` : ''}
-        ${p.journal ? `<span class="meta-item"><i class="ti ti-book" aria-hidden="true"></i>${esc(p.journal)}</span>` : ''}
-        ${p.year    ? `<span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i>${esc(p.year)}</span>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${p.authors?`<span class="meta-item"><i class="ti ti-user"></i>${esc(p.authors)}</span>`:''}
+        ${p.journal?`<span class="meta-item"><i class="ti ti-book"></i>${esc(p.journal)}</span>`:''}
+        ${p.year?`<span class="meta-item"><i class="ti ti-calendar"></i>${esc(p.year)}</span>`:''}
       </div>
-      <div class="approved-abstract">${p.abstract ? esc(p.abstract) : '<em>No abstract.</em>'}</div>
-      ${p.note ? `<div class="approved-note">"${esc(p.note)}"</div>` : ''}
+      <div class="approved-abstract">${p.abstract?esc(p.abstract):'<em>No abstract.</em>'}</div>
+      ${p.note?`<div class="approved-note">"${esc(p.note)}"</div>`:''}
       <div class="approved-footer">
-        ${p.url
-          ? `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" aria-label="Open full paper">
-               <i class="ti ti-external-link" aria-hidden="true"></i> Full Paper
-             </a>` : ''}
+        ${p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener" class="btn btn-sm"><i class="ti ti-external-link"></i> Full Paper</a>`:''}
         <div style="flex:1"></div>
-        <button class="btn btn-ghost btn-sm" onclick="revokeApproval('${p.id}')" style="color:var(--red);font-size:11px;" aria-label="Revoke approval">
-          <i class="ti ti-arrow-back-up" aria-hidden="true"></i> Revoke
-        </button>
+        <button class="btn btn-ghost btn-sm" onclick="revokeApproval('${p.id}')" style="color:var(--red);font-size:11px"><i class="ti ti-arrow-back-up"></i> Revoke</button>
       </div>
     </article>`).join('');
   updateStats();
 }
 
-/* ─── Actions ───────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   PAPER ACTIONS
+───────────────────────────────────────────────────────────────── */
 function setStatus(id, status) {
-  const p = papers.find(x => x.id === id);
-  if (!p) return;
+  const p = papers.find(x => x.id === id); if (!p) return;
   p.status = status;
-  save();
+  saveLocal();
   renderReview();
-  const msgs = { approved: '✓ Approved', rejected: '✗ Rejected', pending: '↩ Reset to pending' };
-  const types = { approved: 'ok', rejected: 'err', pending: 'info' };
-  toast(msgs[status], types[status]);
+  queueWrite(() => rewriteSheet());
+  const m = { approved:'✓ Approved', rejected:'✗ Rejected', pending:'↩ Reset to pending' };
+  const t = { approved:'ok', rejected:'err', pending:'info' };
+  toast(m[status], t[status]);
 }
 
 function revokeApproval(id) {
   setStatus(id, 'pending');
   renderApproved();
-  toast('↩ Approval revoked — moved to pending', 'info');
 }
 
 function deletePaper(id) {
-  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  if (!confirm('Delete this entry? It will also be removed from Google Sheets.')) return;
   papers = papers.filter(x => x.id !== id);
-  save();
-  renderReview();
+  saveLocal(); renderReview();
+  queueWrite(() => rewriteSheet());
   toast('Entry deleted', 'info');
 }
 
 function clearRejected() {
-  const count = papers.filter(p => p.status === 'rejected').length;
-  if (!count) { toast('No rejected entries to clear', 'info'); return; }
-  if (!confirm(`Clear all ${count} rejected entr${count === 1 ? 'y' : 'ies'}?`)) return;
+  const c = papers.filter(p => p.status === 'rejected').length;
+  if (!c) { toast('No rejected entries', 'info'); return; }
+  if (!confirm(`Clear ${c} rejected entr${c===1?'y':'ies'} from app and sheet?`)) return;
   papers = papers.filter(p => p.status !== 'rejected');
-  save();
-  renderReview();
-  toast(`Cleared ${count} rejected entr${count === 1 ? 'y' : 'ies'}`, 'ok');
+  saveLocal(); renderReview();
+  queueWrite(() => rewriteSheet());
+  toast(`Cleared ${c}`, 'ok');
 }
 
-function toggleAbs(id) {
-  const el = document.getElementById('abs-' + id);
-  if (el) el.classList.toggle('expanded');
+function toggleAbs(id) { const el = document.getElementById('abs-' + id); if (el) el.classList.toggle('expanded'); }
+function showNote(id) { const p = papers.find(x => x.id === id); if (!p) return; p.noteVisible = true; renderReview(); }
+
+function saveNote(id, v) {
+  const p = papers.find(x => x.id === id); if (!p) return;
+  p.note = v.trim(); p.noteVisible = true;
+  saveLocal();
+  queueWrite(() => rewriteSheet());
 }
 
-function showNote(id) {
-  const p = papers.find(x => x.id === id);
-  if (!p) return;
-  p.noteVisible = true;
-  renderReview();
+function saveExclusion(id, v) {
+  const p = papers.find(x => x.id === id); if (!p) return;
+  p.exclusionReason = v.trim();
+  saveLocal();
+  queueWrite(() => rewriteSheet());
 }
 
-function saveNote(id, val) {
-  const p = papers.find(x => x.id === id);
-  if (!p) return;
-  p.note = val.trim();
-  p.noteVisible = true;
-  save();
+function applyPreset(id, text) {
+  const p = papers.find(x => x.id === id); if (!p) return;
+  const ta = document.getElementById('excl-' + id);
+  if (ta) {
+    const cur = ta.value.trim();
+    ta.value = cur ? (cur.includes(text) ? cur : cur + '; ' + text) : text;
+    p.exclusionReason = ta.value;
+    saveLocal();
+    queueWrite(() => rewriteSheet());
+  }
 }
 
-/* ─── Add from URL (AI extraction) ─────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   ADD PAPER FLOWS
+───────────────────────────────────────────────────────────────── */
 async function addFromUrl() {
   const url = document.getElementById('url-input').value.trim();
   if (!url) { toast('Please enter a URL', 'err'); return; }
-
-  const loading = document.getElementById('url-loading');
-  const btn = document.getElementById('url-btn');
-  loading.style.display = '';
-  btn.disabled = true;
-
+  const source = document.getElementById('url-source').value;
+  const period = document.getElementById('url-period').value.trim();
+  const loading = document.getElementById('url-loading'), btn = document.getElementById('url-btn');
+  loading.style.display = ''; btn.disabled = true;
   try {
     let meta = {};
-
     if (ANTHROPIC_API_KEY) {
-      // Use Anthropic API for real extraction
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-calls': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 900,
-          messages: [{
-            role: 'user',
-            content: `Extract research paper metadata from this URL: ${url}
-
-Return ONLY a raw JSON object (no markdown, no backticks, no preamble) with these keys:
-title, authors, journal, year, abstract
-
-Rules:
-- authors: string like "Smith J, Doe A, et al."
-- year: string like "2023"
-- abstract: the actual abstract text if you can infer it from the URL/DOI, or a 2-3 sentence description of what this research likely covers based on the URL
-- If a field is unknown, use null`
-          }]
-        })
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:900, messages:[{role:'user',content:`Extract research paper metadata from this URL: ${url}\nReturn ONLY a raw JSON object (no markdown) with keys: title, authors, journal, year, abstract. Use null for unknown.`}] })
       });
-
-      if (!resp.ok) throw new Error('API error ' + resp.status);
-      const data = await resp.json();
-      let text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
-      try { meta = JSON.parse(text); } catch(e) { meta = {}; }
-
-    } else {
-      // Fallback: basic URL-based extraction
-      meta = parseUrlMetadata(url);
-    }
-
-    addPaper({
-      title:    meta.title    || url,
-      authors:  meta.authors  || '',
-      journal:  meta.journal  || '',
-      year:     meta.year ? String(meta.year) : '',
-      abstract: meta.abstract || (ANTHROPIC_API_KEY ? '' : 'Please add an abstract manually. Set your API key for automatic extraction.'),
-      url:      url,
-      type:     'url'
-    });
-
+      if (!resp.ok) throw new Error('API ' + resp.status);
+      const d = await resp.json();
+      let t = (d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+      try { meta = JSON.parse(t); } catch(e) { meta = {}; }
+    } else { meta = parseUrlMeta(url); }
+    await addPaper({ title:meta.title||url, authors:meta.authors||'', journal:meta.journal||'', year:meta.year?String(meta.year):'', abstract:meta.abstract||'', url, source, period, type:'url' });
     document.getElementById('url-input').value = '';
-    toast('Research added from URL', 'ok');
-
-  } catch(e) {
-    console.error(e);
-    toast('Failed to fetch metadata. Add manually or check your API key.', 'err');
-  } finally {
-    loading.style.display = 'none';
-    btn.disabled = false;
-  }
+    toast('Added from URL', 'ok');
+  } catch(e) { console.error(e); toast('Failed — try manual entry', 'err'); }
+  finally { loading.style.display = 'none'; btn.disabled = false; }
 }
 
-// Simple URL-based metadata without API
-function parseUrlMetadata(url) {
+function parseUrlMeta(url) {
   const u = url.toLowerCase();
   let journal = '';
-  if (u.includes('arxiv.org')) journal = 'arXiv';
-  else if (u.includes('pubmed') || u.includes('ncbi.nlm.nih.gov')) journal = 'PubMed';
-  else if (u.includes('doi.org')) journal = 'DOI Reference';
+  if (u.includes('arxiv')) journal = 'arXiv';
+  else if (u.includes('pubmed')||u.includes('ncbi')) journal = 'PubMed';
+  else if (u.includes('doi.org')) journal = 'DOI';
   else if (u.includes('nature.com')) journal = 'Nature';
-  else if (u.includes('science.org')) journal = 'Science';
-  else if (u.includes('springer')) journal = 'Springer';
-  else if (u.includes('elsevier')) journal = 'Elsevier';
-  return {
-    title: url,
-    authors: '',
-    journal: journal,
-    year: new Date().getFullYear().toString(),
-    abstract: 'Set ANTHROPIC_API_KEY in the script to enable automatic abstract extraction.'
-  };
+  else if (u.includes('sciencedirect')) journal = 'ScienceDirect';
+  return { title:url, authors:'', journal, year:new Date().getFullYear().toString(), abstract:'Set ANTHROPIC_API_KEY for auto-extraction.' };
 }
 
-/* ─── Add Manual ────────────────────────────────────────────────── */
-function addManual() {
-  const title    = document.getElementById('m-title').value.trim();
+async function addManual() {
+  const title = document.getElementById('m-title').value.trim();
   const abstract = document.getElementById('m-abstract').value.trim();
-  if (!title)    { toast('Title is required', 'err'); document.getElementById('m-title').focus(); return; }
-  if (!abstract) { toast('Abstract is required', 'err'); document.getElementById('m-abstract').focus(); return; }
-
-  addPaper({
-    title,
-    authors:  document.getElementById('m-authors').value.trim(),
-    journal:  document.getElementById('m-journal').value.trim(),
-    year:     document.getElementById('m-year').value.trim(),
-    url:      document.getElementById('m-url').value.trim(),
-    abstract,
-    type: 'manual'
-  });
-
-  ['m-title','m-authors','m-journal','m-year','m-url','m-abstract'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
+  if (!title) { toast('Title required', 'err'); return; }
+  if (!abstract) { toast('Abstract required', 'err'); return; }
+  await addPaper({ title, authors:document.getElementById('m-authors').value.trim(), journal:document.getElementById('m-journal').value.trim(), year:document.getElementById('m-year').value.trim(), url:document.getElementById('m-url').value.trim(), abstract, source:document.getElementById('m-source').value, period:document.getElementById('m-period').value.trim(), type:'manual' });
+  ['m-title','m-authors','m-journal','m-year','m-url','m-abstract','m-period'].forEach(id => { document.getElementById(id).value=''; });
   toast('Research added', 'ok');
 }
 
-/* ─── PDF Upload ────────────────────────────────────────────────── */
 function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('file-drop').classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file?.type === 'application/pdf') processPdf(file);
-  else toast('Please drop a valid PDF file', 'err');
+  e.preventDefault(); document.getElementById('file-drop').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f?.type==='application/pdf') processPdf(f); else toast('Drop a PDF file','err');
 }
-
-function handlePdfUpload(e) {
-  const file = e.target.files[0];
-  if (file) processPdf(file);
-  e.target.value = '';
-}
+function handlePdfUpload(e) { const f = e.target.files[0]; if (f) processPdf(f); e.target.value=''; }
 
 async function processPdf(file) {
-  const loading  = document.getElementById('pdf-loading');
-  const loadText = document.getElementById('pdf-loading-text');
-  loading.style.display = '';
-  loadText.textContent = 'Reading PDF…';
-
+  const loading = document.getElementById('pdf-loading'), lt = document.getElementById('pdf-loading-text');
+  loading.style.display=''; lt.textContent='Reading PDF…';
   try {
-    // Configure PDF.js worker
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    const arrayBuffer = await file.arrayBuffer();
-    loadText.textContent = 'Parsing pages…';
-
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const maxPages = Math.min(pdf.numPages, 4); // first 4 pages
-    let fullText = '';
-
-    for (let i = 1; i <= maxPages; i++) {
-      const page = await pdf.getPage(i);
-      const tc   = await page.getTextContent();
-      fullText += tc.items.map(item => item.str).join(' ') + '\n\n';
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const ab = await file.arrayBuffer(); lt.textContent='Parsing pages…';
+    const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+    let fullText='';
+    for (let i=1; i<=Math.min(pdf.numPages,4); i++) {
+      const pg = await pdf.getPage(i); const tc = await pg.getTextContent();
+      fullText += tc.items.map(x=>x.str).join(' ')+'\n\n';
     }
-
-    loadText.textContent = 'Extracting metadata…';
-
-    // Extract metadata from text
-    const meta = extractPdfMetadata(fullText, file.name);
-
-    addPaper({
-      title:    meta.title,
-      authors:  meta.authors,
-      journal:  meta.journal,
-      year:     meta.year,
-      abstract: meta.abstract,
-      url:      '',
-      type:     'pdf',
-      filename: file.name
-    });
-
-    toast(`PDF "${file.name}" added`, 'ok');
-
-  } catch(e) {
-    console.error(e);
-    toast('Failed to read PDF. Try manual entry.', 'err');
-  } finally {
-    loading.style.display = 'none';
-  }
+    lt.textContent='Extracting metadata…';
+    const meta = extractPdfMeta(fullText, file.name);
+    await addPaper({...meta, url:'', source:document.getElementById('pdf-source').value, period:document.getElementById('pdf-period').value.trim(), type:'pdf', filename:file.name});
+    toast(`PDF "${file.name}" added`,'ok');
+  } catch(e) { console.error(e); toast('Failed to read PDF','err'); }
+  finally { loading.style.display='none'; }
 }
 
-function extractPdfMetadata(text, filename) {
-  const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-
-  // Title: usually the longest line in first 20 lines, not all-caps
-  let title = filename.replace(/\.pdf$/i, '');
-  for (const line of lines.slice(0, 20)) {
-    if (line.length > 20 && line.length < 200 && !/^\d/.test(line) && line === line) {
-      title = line;
-      break;
-    }
-  }
-
-  // Authors: look for patterns like "Author1, Author2" or lines with multiple names
-  let authors = '';
-  const authorPattern = /([A-Z][a-z]+\s+[A-Z][a-z]*\.?,?\s*){2,}/;
-  for (const line of lines.slice(1, 30)) {
-    if (authorPattern.test(line) && line.length < 250) {
-      authors = line;
-      break;
-    }
-  }
-
-  // Year: find 4-digit year 1990-2099
-  const yearMatch = text.match(/\b(19[9]\d|20[0-2]\d)\b/);
-  const year = yearMatch ? yearMatch[1] : '';
-
-  // Journal: look for "Journal of", "Proceedings", etc.
-  let journal = '';
-  const jMatch = text.match(/(Journal of [A-Za-z ]{3,40}|Proceedings of [A-Za-z ]{3,40}|IEEE [A-Za-z ]{3,40}|Nature [A-Za-z ]{0,20}|Science [A-Za-z ]{0,20})/i);
-  if (jMatch) journal = jMatch[1].trim();
-
-  // Abstract: find text after "Abstract" keyword
-  let abstract = '';
-  const absMatch = text.match(/Abstract[\s\W]+([A-Z].{100,1500}?)(?=\n\n|\bIntroduction\b|\b1\.\b)/is);
-  if (absMatch) {
-    abstract = absMatch[1].replace(/\s+/g, ' ').trim().slice(0, 1200);
-  } else {
-    // Fallback: use a chunk of the text
-    abstract = lines.slice(3, 12).join(' ').slice(0, 800);
-  }
-
+function extractPdfMeta(text, filename) {
+  const lines = text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  let title = filename.replace(/\.pdf$/i,'');
+  for (const l of lines.slice(0,20)) { if (l.length>20&&l.length<200&&!/^\d/.test(l)){ title=l; break; } }
+  let authors='';
+  for (const l of lines.slice(1,30)) { if (/([A-Z][a-z]+\s+[A-Z][a-z]*\.?,?\s*){2,}/.test(l)&&l.length<250){ authors=l; break; } }
+  const ym=text.match(/\b(19[9]\d|20[0-2]\d)\b/); const year=ym?ym[1]:'';
+  let journal='';
+  const jm=text.match(/(Journal of [A-Za-z ]{3,40}|Proceedings of [A-Za-z ]{3,40}|IEEE [A-Za-z ]{3,40}|Nature [A-Za-z ]{0,20})/i);
+  if (jm) journal=jm[1].trim();
+  let abstract='';
+  const am=text.match(/Abstract[\s\W]+([A-Z].{100,1500}?)(?=\n\n|\bIntroduction\b|\b1\.\b)/is);
+  if (am) abstract=am[1].replace(/\s+/g,' ').trim().slice(0,1200);
+  else abstract=lines.slice(3,12).join(' ').slice(0,800);
   return { title, authors, journal, year, abstract };
 }
 
-/* ─── Add Paper ─────────────────────────────────────────────────── */
-function addPaper(data) {
+/* Central addPaper — saves locally + syncs to sheet */
+async function addPaper(data) {
   const paper = {
-    id:      uid(),
-    status:  'pending',
-    added:   new Date().toISOString(),
-    note:    '',
-    noteVisible: false,
-    ...data
+    id: uid(), status:'pending', added:new Date().toISOString(),
+    note:'', noteVisible:false, exclusionReason:'', ...data
   };
   papers.unshift(paper);
-  save();
-  renderReview();
-  updateStats();
+  saveLocal(); renderReview(); updateStats();
+  queueWrite(() => appendRow(paper));
 }
 
-/* ─── Export ────────────────────────────────────────────────────── */
-function exportCSV() {
-  const approved = papers.filter(p => p.status === 'approved');
-  if (!approved.length) { toast('No approved papers to export', 'info'); return; }
+/* ─────────────────────────────────────────────────────────────────
+   EXPORT EXCEL (grouped by source, matching sample table)
+───────────────────────────────────────────────────────────────── */
+function exportExcel() {
+  if (!papers.length) { toast('No entries to export','info'); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = [];
+  const merges = [];
+  let rowIdx = 0;
 
-  const headers = ['Title', 'Authors', 'Journal', 'Year', 'URL', 'Abstract', 'Note', 'Added'];
-  const rows = approved.map(p => [
-    p.title, p.authors, p.journal, p.year, p.url,
-    p.abstract, p.note, p.added
-  ].map(v => `"${(v || '').replace(/"/g, '""')}"`));
+  rows.push(['List number','Topic (Title)','Included','Excluded','Reason of exclusion']);
+  rowIdx++;
 
-  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-  downloadFile(csv, 'approved_research.csv', 'text/csv');
-  toast(`Exported ${approved.length} papers as CSV`, 'ok');
+  const sources = [...new Set(papers.map(p => p.source||'Other'))];
+  let num = 1;
+
+  for (const src of sources) {
+    const sp = papers.filter(p => (p.source||'Other') === src);
+    if (!sp.length) continue;
+    const period = sp.find(p=>p.period)?.period || '';
+    const srcLabel = `${src}${period?` (${period})`:''}${sp.length?`, n=${sp.length}`:''}`;
+
+    rows.push([srcLabel,'','','','']);
+    merges.push({s:{r:rowIdx,c:0},e:{r:rowIdx,c:4}});
+    rowIdx++;
+
+    rows.push(['Included articles (defined list number of article and topic)','','','','']);
+    merges.push({s:{r:rowIdx,c:0},e:{r:rowIdx,c:4}});
+    rowIdx++;
+
+    const included = sp.filter(p=>p.status==='approved');
+    if (included.length) {
+      included.forEach((p,i) => { rows.push([String(num+i),p.title||'','x','','']); rowIdx++; });
+      num += included.length;
+    } else { rows.push(['—','(none)','','','']); rowIdx++; }
+
+    rows.push(['Excluded articles (defined only number and reason of their exclusion)','','','','']);
+    merges.push({s:{r:rowIdx,c:0},e:{r:rowIdx,c:4}});
+    rowIdx++;
+
+    const excluded = sp.filter(p=>p.status==='rejected');
+    if (excluded.length) {
+      excluded.forEach((p,i) => { rows.push([String(num+i),p.title||'','',String(num+i),p.exclusionReason||'']); rowIdx++; });
+      num += excluded.length;
+    } else { rows.push(['—','(none)','','','']); rowIdx++; }
+
+    const pend = sp.filter(p=>p.status==='pending');
+    if (pend.length) {
+      rows.push([`Note: ${pend.length} article(s) still pending`,'','','','']);
+      merges.push({s:{r:rowIdx,c:0},e:{r:rowIdx,c:4}});
+      rowIdx++;
+    }
+
+    rows.push(['','','','','']); rowIdx++;
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!merges'] = merges;
+  ws['!cols'] = [{wch:14},{wch:58},{wch:12},{wch:12},{wch:42}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Research Filter Results');
+  XLSX.writeFile(wb, 'research_filter_results.xlsx');
+  toast(`Exported ${papers.length} entries as Excel`,'ok');
 }
 
-function exportJSON() {
-  const approved = papers.filter(p => p.status === 'approved');
-  if (!approved.length) { toast('No approved papers to export', 'info'); return; }
-  downloadFile(JSON.stringify(approved, null, 2), 'approved_research.json', 'application/json');
-  toast(`Exported ${approved.length} papers as JSON`, 'ok');
+/* ─────────────────────────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────────────────────────── */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) {
+  if (s==null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function downloadFile(content, filename, mime) {
-  const blob = new Blob([content], { type: mime });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-}
-
-/* ─── Toast ─────────────────────────────────────────────────────── */
-let toastTimer;
-function toast(msg, type = 'info') {
-  const el   = document.getElementById('toast');
-  const icon = document.getElementById('toast-icon');
-  const msgEl = document.getElementById('toast-msg');
-
-  const iconMap = { ok: 'ti-circle-check', err: 'ti-alert-circle', info: 'ti-info-circle' };
-  icon.className = 'ti ' + (iconMap[type] || iconMap.info);
-
-  msgEl.textContent = msg;
-  el.className = 'show ' + (type || 'info');
-
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.className = ''; }, 3200);
-}
-
-/* ─── Helpers ───────────────────────────────────────────────────── */
 function formatDate(iso) {
   if (!iso) return '';
-  try {
-    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  } catch(e) { return ''; }
+  try { return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch(e){ return ''; }
 }
 
-/* ─── Init ──────────────────────────────────────────────────────── */
-renderReview();
-updateStats();
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  const iconMap = { ok:'ti-circle-check', err:'ti-alert-circle', info:'ti-info-circle', sync:'ti-cloud' };
+  document.getElementById('toast-icon').className = 'ti ' + (iconMap[type]||iconMap.info);
+  document.getElementById('toast-msg').textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className=''; }, 3400);
+}
 
-/* ─── Keyboard shortcut: / to focus search ─────────────────────── */
+/* ── Init ── */
+renderReview(); updateStats();
 document.addEventListener('keydown', e => {
-  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-    e.preventDefault();
-    document.getElementById('search').focus();
+  if (e.key==='/' && document.activeElement.tagName!=='INPUT' && document.activeElement.tagName!=='TEXTAREA') {
+    e.preventDefault(); document.getElementById('search').focus();
   }
 });
 </script>
-
 </body>
 </html>
